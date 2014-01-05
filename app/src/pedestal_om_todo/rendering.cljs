@@ -1,89 +1,64 @@
 (ns pedestal-om-todo.rendering
-  (:require [domina :as dom]
+  (:require [clojure.string :as string]
+            [clojure.set :as set]
+            [domina :as domina]
+            [io.pedestal.app.messages :as msg]
+            [io.pedestal.app.protocols :as p]
             [io.pedestal.app.render.push :as render]
+            [io.pedestal.app.render.push.handlers :as h]
+            [io.pedestal.app.render.push.handlers.automatic :as d]
             [io.pedestal.app.render.push.templates :as templates]
-            [io.pedestal.app.render.push.handlers.automatic :as d])
+            [om.core :as om :include-macros true]
+            [om.dom :as dom :include-macros true]
+            [pedestal-om-todo.utils :as util]
+            [pedestal-om-todo.todos.list :as todo-list]
+            [pedestal-om-todo.todos.item :as todo-item])
   (:require-macros [pedestal-om-todo.html-templates :as html-templates]))
-
-;; Load templates.
 
 (def templates (html-templates/pedestal-om-todo-templates))
 
-;; The way rendering is handled below is the result of using the
-;; renderer provided in `io.pedestal.app.render`. The only requirement
-;; for a renderer is that it must implement the Renderer protocol.
-;;
-;; This renderer dispatches to rendering functions based on the
-;; requested change. See the render-config table below. Each render
-;; function takes three arguments: renderer, render operation and a
-;; a transmitter which is used to send data back to the application's
-;; behavior. This example does not use the transmitter.
+(def ^:private root-id
+  "Instead of swapping out HTML templates,
+   we instead only create and destroy Om roots."
+  (util/uuid))
 
-(defn render-page [renderer [_ path] transmitter]
-  (let [;; The renderer that we are using here helps us map changes to
-        ;; the UI tree to the DOM. It keeps a mapping of paths to DOM
-        ;; ids. The `get-parent-id` function will return the DOM id of
-        ;; the parent of the node at path. If the path is [:a :b :c]
-        ;; then this will find the id associated with [:a :b]. The
-        ;; root node [] is configured when we created the renderer.
-        parent (render/get-parent-id renderer path)
-        ;; Use the `new-id!` function to associate a new id to the
-        ;; given path. With two arguments, this function will generate
-        ;; a random unique id. With three arguments, the given id will
-        ;; be associated with the given path.
-        id (render/new-id! renderer path)
-        ;; Get the dynamic template named :pedestal-om-todo-page
-        ;; from the templates map. The `add-template` function will
-        ;; associate this template with the node at
-        ;; path. `add-template` returns a function that can be called
-        ;; to generate the initial HTML.
-        html (templates/add-template renderer path (:pedestal-om-todo-page templates))]
-    ;; Call the `html` function, passing the initial values for the
-    ;; template. This returns an HTML string which is then added to
-    ;; the DOM using Domina.
-    (dom/append! (dom/by-id parent) (html {:id id :message ""}))))
-
-(defn render-message [renderer [_ path _ new-value] transmitter]
-  ;; This function responds to a :value event. It uses the
-  ;; `update-t` function to update the template at `path` with the new
-  ;; values in the passed map.
-  (templates/update-t renderer path {:message new-value}))
-
-
-;; Todo List
-
-(defn add-list-template [renderer [_ path :as delta] input-queue]
+(defn create-root [renderer [_ path :as delta] input-queue]
   (let [parent (render/get-parent-id renderer path)
-        id (render/new-id! renderer path)
-        html (:list-page templates)]
-    (dom/append! (dom/by-id parent) (html {:id id}))))
+        html (:root templates)]
+    (domina/append! (domina/by-id parent) (html {:id root-id}))))
 
-(defn add-list-delete-handler
-  ""
-  [renderer ]
-  (events/collect-and-send :click)
+(defn add-list-template [_ _ input-queue]
+  (todo-list/start input-queue root-id))
 
-;; Individual Todo
+(defn add-todo-template [_ _ input-queue]
+  (todo-item/start input-queue root-id))
 
-(defn add-todo-template [renderer [_ path :as delta] input-queue]
-  (let [parent (render/get-parent-id renderer path)
-        id (render/new-id! renderer path)
-        html (:todo-page templates)]
-    (dom/append! (dom/by-id parent) (html {:id id}))))
+(defn destroy-view
+  "unmount the root React component, and leave the renderer as is"
+  [r [_ path] _]
+  (React/unmountComponentAtNode (.getElementById js/document root-id))
+  (if-let [id (render/get-id r path)]
+    (render/delete-id! r path)))
 
+;; ----------------------------------------------------------------------
 ;; Config
 
 (defn render-config []
-  [;; list
-   [:node-create [:list] add-list-template]
-   [:node-destroy [:list] h/default-destroy]
-   [:transform-enable [:list :delete] add-list-delete-handler]
-   [:transform-disable [:list :delete] remove-list-delete-handler]
+  [;; Root View never gets destroyed
+   [:node-create [:root] create-root]
 
-   ;; todo
-   [:node-create [:todo] add-todo-template]
-   [:node-destroy [:todo] h/default-destroy]])
+   ;; list
+   [:node-create [:todo-list] add-list-template]
+   [:node-destroy [:todo-list] destroy-view]
 
-;; In render-config, paths can use wildcard keywords :* and :**. :*
-;; means exactly one segment with any value. :** means 0 or more
-;; elements.
+   ;; item view
+   [:node-create [:todo-item] add-todo-template]
+   [:node-destroy [:todo-item] destroy-view]
+
+   ;; todos
+   [:node-destroy [:todos :modify] h/default-destroy]
+   [:value [:todos :modify] todo-list/todos-modify]
+   [:value [:todos :all-completed?] todo-list/todos-all-completed?]
+   [:value [:todos :viewing] todo-item/view-item]
+   [:value [:todos :filter] todo-list/filter-set]
+   ])

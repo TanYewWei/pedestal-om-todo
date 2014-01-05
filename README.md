@@ -1,57 +1,25 @@
 # pedestal-om-todo
 
-Start working on this application by writing its behavior in the file
-`app/src/pedestal_om_todo/behavior.clj`
+This is just a toy experiment as an attempt to use [David Nolen's Om](https://github.com/swannodette/om) along side [Cognitect's Pedestal](https://github.com/pedestal/pedestal) to implement a [TodoMVC example](http://todomvc.com).
 
+## TODO
 
-## Usage
+* undo support as per [David Nolen's example](http://swannodette.github.io/todomvc/labs/architecture-examples/om-undo/index.html)
 
-`cd` into any directory and execute the following:
+* routing based on focus of application.
 
-```bash
-lein new pedestal-app my-project
-cd my-project
-lein repl
-```
+    At present, we've got one focus for the todo list, and one focus for a detailed todo item view.
 
-The `io.pedestal.app-tools.dev` namespace is loaded by default. It contains
-several useful functions. To see a list of some of these functions, type:
+    So for example, the root `/` path should land us on the todo list, and the path `/item/:id` should show us the detailed view of a todo item
 
-```clj
-(tools-help)
-```
+* persistence API
 
-To begin working on an application, execute:
+    This should just be an interface that can be pluggable into any adapter (localStorage, some database server, etc ...)
 
-```clj
-(start)
-```
+* externs file for React
 
-and then visit `http://localhost:3000`.
+    At this point in time, clojurescript advanced compilation is not supported 
 
-Alternatively, start the app server from the command line: `lein run`.
+## License
 
-During development of an application, sources will be compiled
-on-demand. Sources include everything located in the `app`
-directory. All compiled output goes to `out/public`. The contents of
-`out/public` are transient and the `out` directory can be deleted at
-any time to trigger a complete re-build.
-
-The contents of `out/public` are the deployment artifacts for this
-project.
-
-If you would like to serve the contents of `out/public` from another
-server and not run the development server. Run:
-
-```clj
-(watch :development)
-```
-
-from the application project to automatically build the `:development`
-environment when sources change.
-
-
-## Links
-
-* [Overview of how pedestal-app works](http://pedestal.io/documentation/application-overview/)
-* [Comprehensive tutorial for pedestal-app](https://github.com/pedestal/app-tutorial)
+Code is in the public domain.

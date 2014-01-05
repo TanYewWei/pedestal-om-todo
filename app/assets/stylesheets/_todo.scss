@@ -1,0 +1,184 @@
+/* ----------------------------------------------------------------------
+ * TODO LIST
+ * ---------------------------------------------------------------------- */
+
+$todo-margin-v: 8px;
+$todo-inner-h: 35px;
+$todo-h: $todo-inner-h + 2 * $todo-margin-v;
+
+$color-unchecked: #ccc;
+$color-checked: #85ada7;
+
+@mixin remove-checkbox() {
+    border: none;
+    -webkit-appearance: none;
+    -ms-appearance: none;
+    -o-appearance: none;
+    appearance: none;
+}
+
+.checked:after, .checked:before {
+    color: $color-checked !important;
+}
+
+#input-row {
+    position: relative;
+
+    #select-all {
+        $dim: 30px;
+        $font-size: 50px;
+        height: $dim;
+        position: absolute;
+        top: 5px;
+        left: 30px;
+        width: $dim;
+        
+        @include remove-checkbox();
+    }
+
+    #select-all:before {
+        $font-size: 30px;
+        color: $color-unchecked;        
+        content: "\25BC";
+        font-size: $font-size;
+        line-hegiht: $font-size;
+        text-align: center;
+    }
+
+    #new-todo {
+        font-size: 1.5em;
+        padding: 10px;
+        padding-left: 100px;
+        width: 100%;
+    }
+}
+
+#todo-list-rows {
+    list-style-type: none;
+    padding: 0px;
+}
+
+.todo-item .cont * {
+    display: inline-block;
+    height: $todo-inner-h;
+    margin: $todo-margin-v 10px;
+}
+
+.todo-item {
+    border: 1px #eee solid;
+    height: $todo-h;
+}
+
+.todo-item .cont {
+    .toggle-status {
+        border: none;
+        float: left;
+        text-align: center;
+        width: 70px;
+        @include remove-checkbox();
+    }
+
+    .toggle-status:after {
+        $font-size: 30px;
+        color: $color-unchecked;
+        content: "\2714";
+        font-size: $font-size;
+        line-height: $font-size;
+        width: 100%;
+    }
+
+    .toggle-status:focus {
+        outline: none;
+        -moz-outline: none;
+    }
+
+    .title {
+        font-size: 1.4em;
+        height: 100%;
+    }
+
+    .title-completed {
+        color: #a9a9a9;
+        text-decoration: line-through;
+    }
+
+    .delete-todo {
+        float: right;
+        width: 80px;
+    }
+}
+
+#footer {
+    $margin: 15px;
+
+    position: relative;
+
+    #remaining-count-cont {
+        float: left;
+        font-size: 1.4em;
+        left: $margin;
+        position: absolute;        
+        top: $margin;
+    }
+
+    ul {
+        $button-w: 100px;
+        
+        list-style: none;
+        margin: 0px auto;
+        width: 300px;
+
+        li {
+            display: inline-block;
+            width: 33%;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        a {
+            font-size: 1.3em;
+            margin: 0px;
+            padding: 10px;
+            width: 80%;
+        }
+
+        .selected-filter {
+            color: #000;
+            font-size: 1.4em;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    }
+
+    #completed-delete-cont {
+        float: right;
+        position: absolute;
+        right: $margin;
+        top: $margin;
+    }
+}
+
+/* ----------------------------------------------------------------------
+ * ITEMS
+ * ---------------------------------------------------------------------- */
+
+#item-cont {    
+    margin: 0px auto;
+    min-width: 400px;
+    max-width: 1024px;
+
+    #title-input {
+        font-size: 1.4em;
+        margin-top: 15px;
+        padding: 7px;
+        width: 100%;
+    }
+
+    #body-edit {
+        font-size: 1.2em;
+        height: 150px;
+        margin: 15px auto;
+        padding: 7px;
+        width: 100%;
+    }
+}

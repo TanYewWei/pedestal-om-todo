@@ -1,4 +1,8 @@
+*.org
+docs/
+logs/
 out/
 target/
-logs/
 .lein-repl-history
+.nrepl-port
+.sass-cache

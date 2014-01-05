@@ -14,6 +14,18 @@
         render-fn (push-render/renderer "content" render-config render/log-fn)
         app-model (render/consume-app-model app render-fn)]
     (app/begin app)
+    
+    ;; Send message to create root view
+    (p/put-message (:input app) {msg/type :render msg/topic [:root] :value true})
+
+    ;; Create a todo
+    (p/put-message (:input app) {msg/type :todos
+                                 msg/topic [:todos :modify "123"]
+                                 :todo {:id "123"
+                                        :title "hello"
+                                        :body "it's a good day"
+                                        :ord 0
+                                        :completed? false}})
     {:app app :app-model app-model}))
 
 (defn ^:export main []

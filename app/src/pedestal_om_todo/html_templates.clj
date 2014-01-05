@@ -3,5 +3,4 @@
 
 (defmacro pedestal-om-todo-templates
   []
-  {:list-page (tfn (tnodes "list.html" "list"))
-   :todo-page (tfn (tnodes "todo.html" "todo"))})
+  {:root (tfn (tnodes "root.html" "root"))})
