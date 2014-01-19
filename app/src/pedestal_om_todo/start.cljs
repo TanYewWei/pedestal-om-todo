@@ -7,8 +7,6 @@
             [pedestal-om-todo.behavior :as behavior]
             [pedestal-om-todo.rendering :as rendering]))
 
-;; In this namespace, the application is built and started.
-
 (defn create-app [render-config]
   (let [app (app/build behavior/app)
         render-fn (push-render/renderer "content" render-config render/log-fn)
@@ -30,10 +28,3 @@
 
 (defn ^:export main []
   (create-app (rendering/render-config)))
-
-;; (defn ^:export main []
-;;   (let [app (create-app (rendering/render-config))
-;;         services (services/->Services (:app app))]
-;;     (app/consume-effects (:app app) services/services-fn)
-;;     (p/start services)
-;;     app))
