@@ -7,8 +7,9 @@
                  [cljs-uuid "0.0.4"] 
                  [io.pedestal/pedestal.app "0.2.2"]
                  [io.pedestal/pedestal.app-tools "0.2.2"]
-                 [om "0.1.7"]
+                 [om "0.2.1"]
                  [sablono "0.2.1"]
+                 [secretary "0.4.0"]
                  [com.cemerick/piggieback "0.1.0"]]
   :min-lein-version "2.0.0"
   :source-paths ["app/src" "app/templates"]

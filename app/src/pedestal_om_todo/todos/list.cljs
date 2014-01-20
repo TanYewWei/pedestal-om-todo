@@ -10,35 +10,11 @@
             [io.pedestal.app.render.push.templates :as templates]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
+            [pedestal-om-todo.routes :as routes]
             [pedestal-om-todo.utils :as util]
             [sablono.core :as html :refer [html] :include-macros true]))
 
-(def ^:private app-state
-  ""
-  (atom nil))
-
-(defn- goto-item [evt todo input-queue]
-  (let [msg {msg/type :todos
-             msg/topic [:todos :viewing]
-             :todo todo}
-        root-node-id (om/read @app-state :root-node-id (fn [x] x))]
-    (p/put-message input-queue msg)))
-
-(defn- new-todo-keydown [evt owner input-queue]
-  (when (== (util/keyboard-event-key evt) util/ENTER_KEY)
-    (let [new-field (om/get-node owner "new-field")]
-      (when-not (string/blank? (.. new-field -value trim))
-        (let [new-todo {:id (util/guid)
-                        :title (.-value new-field)
-                        :body ""
-                        :ord nil
-                        :completed? false}
-              msg {msg/type :todos
-                   msg/topic [:todos :modify (:id new-todo)]
-                   :todo new-todo}]
-          (set! (.-value new-field) "")
-          (p/put-message input-queue msg))))
-    false))
+(def ^:private app-state (atom nil))
 
 ;; ----------------------------------------------------------------------
 ;; Todo CRUD
@@ -51,6 +27,22 @@
 
 (defn todos-all-completed? [_ [_ _ _ value] _]
   (om/transact! @app-state :all-completed? (fn [_] value)))
+
+(defn- new-todo-keydown [evt owner input-queue]
+  (when (== (util/keyboard-event-key evt) util/ENTER_KEY)
+    (let [new-field (om/get-node owner "new-field")]
+      (when-not (string/blank? (.. new-field -value trim))
+        (let [new-todo {:id (util/uuid)
+                        :title (.-value new-field)
+                        :body ""
+                        :ord nil
+                        :completed? false}
+              msg {msg/type :todos
+                   msg/topic [:todos :modify (:id new-todo)]
+                   :todo new-todo}]
+          (set! (.-value new-field) "")
+          (p/put-message input-queue msg))))
+    false))
 
 (defn- todo-destroy [evt todo input-queue]
   (let [todo-id (:id todo)]
@@ -107,22 +99,24 @@
     :active (not (:completed? todo))
     :completed (:completed? todo)))
 
-(defn- todo-list-item [todo-cursor owner {:keys [hidden input-queue] :as opts}]
+(defn- todo-list-item [todo-cursor owner] ;;{:keys [hidden input-queue] :as opts}]  
   (let [todo (om/value todo-cursor)
         hidden-class (if (:hidden todo) "hidden" nil)]
-    (om/component
-     (html [:li {:className (str "todo-item " hidden-class)}
-            [:div.cont
-             [:span
-              {:className (str "toggle-status " (if (:completed? todo) "checked"))
-               :onClick #(todo-status-toggle % todo input-queue)}]
-             [:label
-              {:className (str "title " (if (:completed? todo) "title-completed"))
-               :onClick #(goto-item % todo input-queue)}
-              (:title todo)]
-             [:button.delete-todo.btn.btn-danger
-              {:onClick #(todo-destroy % todo input-queue)}
-              "Delete"]]]))))
+    (reify
+      om/IRenderState
+      (render-state [_ {:keys [input-queue] :as opts}]
+        (html [:li {:className (str "todo-item " hidden-class)}
+               [:div.cont
+                [:span
+                 {:className (str "toggle-status " (if (:completed? todo) "checked"))
+                  :onClick #(todo-status-toggle % todo input-queue)}]
+                [:label
+                 {:className (str "title " (if (:completed? todo) "title-completed"))
+                  :onClick (fn [_] (routes/goto-item todo))}
+                 (:title todo)]
+                [:button.delete-todo.btn.btn-danger
+                 {:onClick #(todo-destroy % todo input-queue)}
+                 "Delete"]]])))))
 
 (defn- todo-list-item-build
   "passed to the om/build-all function, 
@@ -139,7 +133,7 @@
        (om/build-all todo-list-item
                      todos
                      {:key :id  ;; referring to the todo item's :id
-                      :opts {:input-queue input-queue}
+                      :init-state {:input-queue input-queue}
                       :fn (fn [todo] (todo-list-item-build todo filter))})]))))
 
 ;; ----------------------------------------------------------------------
@@ -168,15 +162,19 @@
             [:ul#controls
              [:li [:a#filter-all
                    {:className (filter-selection-class :all filter)
-                    :onClick #(filter-select % :all input-queue)}
+                    ;;:onClick #(filter-select % :all input-queue)
+                    :href "#/"}
                    "All"]]
              [:li [:a#filter-active
                    {:className (filter-selection-class :active filter)
-                    :onClick #(filter-select % :active input-queue)}
+                    ;;:onClick #(filter-select % :active input-queue)
+                    :href "#/active"}
                    "Active"]]
              [:li [:a#filter-completed
                    {:className (filter-selection-class :completed filter)
-                    :onClick #(filter-select % :completed input-queue)}
+                    ;;:onClick #(filter-select % :completed input-queue)
+                    ;;:onClick #(filter-select1 % :completed)
+                    :href "#/completed"}
                    "Completed"]]]
             [:div#completed-delete-cont
              {:className (if (< completed-count 1) "hidden")}

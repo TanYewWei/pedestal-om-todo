@@ -15,6 +15,9 @@
   [evt]
   (.-which evt))
 
+(defn add-uuid [m]
+  (assoc m ::ts (uuid)))
+
 (defn log 
   ([x] (js/console.log x))
   ([x y] (js/console.log x y)))
