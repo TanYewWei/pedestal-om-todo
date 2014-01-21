@@ -3,17 +3,12 @@
               [io.pedestal.app :as app]
               [io.pedestal.app.dataflow :as dataflow]
               [io.pedestal.app.messages :as msg]
+              [io.pedestal.app.protocols :as p]
+              [pedestal-om-todo.history :as history]
+              [pedestal-om-todo.routes :as routes]
+              [pedestal-om-todo.state :as state]
               [pedestal-om-todo.utils :as util])
     (:import [goog.ui IdGenerator]))
-
-;; ----------------------------------------------------------------------
-;; App Creation
-
-(defn start-transform [_ _] true)
-
-(defn start-app-continue [inputs]
-  (if (:new (dataflow/old-and-new inputs [:root]))
-    [^:input {msg/type :set-focus msg/topic msg/app-model :name :todo-list}]))
 
 ;; ----------------------------------------------------------------------
 ;; Transforms
@@ -32,7 +27,7 @@
 
 (defn todo-all-completed?-transform [old-value message]
   (let [value (:value message)]
-    (cond 
+    (cond
      (not (nil? value)) value
      (nil? old-value)   true
      true               (not old-value))))
@@ -40,27 +35,40 @@
 ;; ----------------------------------------------------------------------
 ;; Continue
 
+(defn goto-item [id app-model]
+  (let [todo (get-in app-model [:todos :modify id])]
+    (p/put-message @state/input-queue (history/navigate :todo-item))))
+
 (defn- todo-modify-todos [todos]
   (filter #(map? %) (vals todos)))
 
 (defn todo-item-view-continue [inputs]
   (let [viewing (dataflow/old-and-new inputs [:todos :viewing])
-        old-val (:old viewing)
-        new-val (:new viewing)]
-    (when (or old-val new-val)
-      (if (and (nil? old-val) new-val)
+        old-todo (:old viewing)
+        new-todo (:new viewing)]
+    (when (and (or old-todo new-todo)
+               (not= old-todo new-todo))
+      (if (and (nil? old-todo) new-todo)
         ;; navigating from list to item view
-        ;; (sending todo to [:todos :viewing :todo] path)
-        [{msg/type :todos msg/topic [:todos :viewing] :todo new-val}
-         ^:input {msg/type :set-focus msg/topic msg/app-model :name :todo-item}]
+        (routes/goto-confirm-item new-todo (:new-model inputs))
         
         ;; navigating from item view back to list
-        ;; (need to set sentinel to refresh tree)
-        [^:input {msg/type :set-focus msg/topic msg/app-model
-                  :name :todo-list}
-         ^:input {msg/type :todos 
-                  msg/topic [:todos :modify :sentinel]
-                  :todo (util/guid)}]))))
+        (routes/goto-confirm-list)))))
+
+(defn focus-continue
+  "triggered when [:root :focus :*] changes.
+   This is ALWAYS a result of a defroute invocation from pedestal-om-todo.routes
+   
+   This is where any 'stateful' route processing is handled"
+  [inputs]
+  (let [message (:message inputs)]
+    (when (= :navigate (msg/type message))
+      (let [path (msg/topic message)
+            target (last path)
+            app-model (:old-model inputs)]
+        (case target
+          :item  (routes/goto-confirm-item (:value message) app-model)
+          (routes/goto-confirm-list))))))
 
 (defn todo-item-ordinal-continue [inputs]  
   (if-let [current-todo (first (vals (dataflow/added-inputs inputs)))]
@@ -107,33 +115,30 @@
             new-todos (into {} (map update-fn todos))]
         [{msg/type :todos msg/topic [:todos :modify] :value new-todos}]))))
 
+;; ----------------------------------------------------------------------
+;; Dataflow
+
 (defn init-todos [x]
   [{:todo-list {}}
-   {:todo-item {}}])
+   {:todo-item {}}
+   {:root {:focus {}}}])
 
 (def app
-  ;; There are currently 2 versions (formats) for dataflow
-  ;; description: the original version (version 1) and the current
-  ;; version (version 2). If the version is not specified, the
-  ;; description will be assumed to be version 1 and an attempt
-  ;; will be made to convert it to version 2.
   {:version 2
    :debug true
-   :transform [[:render [:root] start-transform]
+   :transform [[routes/navigate [:root :focus :*] set-value-transform]
                [:todos [:todos :filter] set-value-transform]
                [:todos [:todos :modify] set-value-transform]
                [:todos [:todos :modify :*] todo-modify-transform]
                [:todos [:todos :all-completed?] todo-all-completed?-transform]
                [:todos [:todos :destroy] refresh-transform]
                [:todos [:todos :viewing] todo-modify-transform]]
-   :continue #{[#{[:todos :viewing]} todo-item-view-continue]
-               [#{[:todos :all-completed?]} todo-all-completed?-continue]
+   :continue #{[#{[:todos :all-completed?]} todo-all-completed?-continue]
                [#{[:todos :modify :*]} todo-item-ordinal-continue]
                [#{[:todos :destroy]} todo-destroy-continue]
-               [#{[:root]} start-app-continue]}
+               [#{[:root :focus]} routes/focus-handler]}
    :emit [{:init init-todos}
-          [#{[:root]
-             [:todo-list :*]
+          [#{[:todo-list :*]
              [:todo-item :*]
              [:todos :filter]
              [:todos :all-completed?]
@@ -142,5 +147,4 @@
    :focus {:todo-list [[:todo-list] [:todos]]
            :todo-item [[:todo-item] [:todos]]
            :root [[:root]]
-           :default :root}
-   })
+           :default :root}})
