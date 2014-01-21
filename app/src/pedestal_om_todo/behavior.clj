@@ -7,8 +7,7 @@
               [pedestal-om-todo.history :as history]
               [pedestal-om-todo.routes :as routes]
               [pedestal-om-todo.state :as state]
-              [pedestal-om-todo.utils :as util])
-    (:import [goog.ui IdGenerator]))
+              [pedestal-om-todo.utils :as util]))
 
 ;; ----------------------------------------------------------------------
 ;; Transforms

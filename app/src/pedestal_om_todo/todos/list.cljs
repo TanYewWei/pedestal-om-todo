@@ -11,6 +11,7 @@
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
             [pedestal-om-todo.routes :as routes]
+            [pedestal-om-todo.state :as state]
             [pedestal-om-todo.utils :as util]
             [sablono.core :as html :refer [html] :include-macros true]))
 
@@ -33,7 +34,7 @@
   [_ [_ _ _ value] _]
   (om/transact! @app-state :all-completed? (fn [_] value)))
 
-(defn- new-todo-keydown [evt owner input-queue]
+(defn- new-todo-keydown [evt owner]
   (when (== (util/keyboard-event-key evt) util/ENTER_KEY)
     (let [new-field (om/get-node owner "new-field")]
       (when-not (string/blank? (.. new-field -value trim))
@@ -44,20 +45,21 @@
                         :completed? false}
               msg {msg/type :todos
                    msg/topic [:todos :modify (:id new-todo)]
-                   :todo new-todo}]
+                   :todo new-todo}
+              input-queue @state/input-queue]
           (set! (.-value new-field) "")
           (p/put-message input-queue msg))))
     false))
 
 (defn- todo-destroy
   "destroys a specific todo"
-  [_ todo input-queue]
+  [_ todo]
   (let [todo-id (:id todo)]
     (om/transact! @app-state :todos
                   (fn [todos] (into [] (remove #(= (:id %) todo-id) todos))))
-    (p/put-message input-queue {msg/type :todos
-                                msg/topic [:todos :modify todo-id]
-                                :todo nil})))
+    (p/put-message @state/input-queue {msg/type :todos
+                                       msg/topic [:todos :modify todo-id]
+                                       :todo nil})))
 
 (defn- todo-destroy-completed
   "Sends messages to the app-model
@@ -65,18 +67,20 @@
    - requesting it to destroy all completed todos.   
    
    Handled by the function pedestal-om-todo.behavior/todo-destroy-continue"
-  [evt input-queue]
-  (p/put-message input-queue {msg/type :todos
-                              msg/topic [:todos :all-completed?]
-                              :value false})
-  (p/put-message input-queue {msg/type :todos
-                              msg/topic [:todos :destroy]
-                              :pred (fn [todo] (:completed? todo))}))
+  [_]
+  (let [input-queue @state/input-queue]
+    (p/put-message input-queue {msg/type :todos
+                                msg/topic [:todos :all-completed?]
+                                :value false})
+    (p/put-message input-queue {msg/type :todos
+                                msg/topic [:todos :destroy]
+                                :pred (fn [todo] (:completed? todo))})))
 
 (defn- todo-status-toggle
   "toggles the status of a particular todo"
-  [evt todo input-queue]
-  (let [new-todo (update-in todo [:completed?] #(not %))]
+  [evt todo]
+  (let [new-todo (update-in todo [:completed?] #(not %))
+        input-queue @state/input-queue]
     ;; Put one message to modify todo status
     (p/put-message input-queue {msg/type :todos
                                 msg/topic [:todos :modify (:id todo)]
@@ -92,25 +96,24 @@
 
 (defn- todo-all-completed?-toggle
   "toggles the status of all todos"
-  [evt input-queue]
-  (p/put-message input-queue {msg/type :todos
-                              msg/topic [:todos :all-completed?]}))
+  [_]
+  (p/put-message @state/input-queue {msg/type :todos
+                                     msg/topic [:todos :all-completed?]}))
 
-(defn- todo-input-row [{:keys [all-completed? todos queue] :as app} owner]
-  (let [input-queue (om/value queue)]
-    (om/component
-     (html [:div#input-row
-            [:span#select-all
-             ;; see todo-list-item for explanation of using <span>
-             ;; instead of <input> for "checkboxes"
-             {:className (if (< (count todos) 1)
-                           "hidden"
-                           (if all-completed? "checked"))
-              :onClick #(todo-all-completed?-toggle % input-queue)}]
-            [:input#new-todo
-             {:placeholder "What needs to be done?"
-              :ref "new-field"
-              :onKeyDown #(new-todo-keydown % owner input-queue)}]]))))
+(defn- todo-input-row [{:keys [all-completed? todos] :as app} owner]
+  (om/component
+   (html [:div#input-row
+          [:span#select-all
+           ;; see todo-list-item for explanation of using <span>
+           ;; instead of <input> for "checkboxes"
+           {:className (if (< (count todos) 1)
+                         "hidden"
+                         (if all-completed? "checked"))
+            :onClick #(todo-all-completed?-toggle %)}]
+          [:input#new-todo
+           {:placeholder "What needs to be done?"
+            :ref "new-field"
+            :onKeyDown #(new-todo-keydown % owner)}]])))
 
 (defn- list-item-visible? [todo filter]
   (case filter
@@ -118,12 +121,12 @@
     :active (not (:completed? todo))
     :completed (:completed? todo)))
 
-(defn- todo-list-item [todo-cursor owner] ;;{:keys [hidden input-queue] :as opts}]  
+(defn- todo-list-item [todo-cursor owner]
   (let [todo (om/value todo-cursor)
         hidden-class (if (:hidden todo) "hidden" nil)]
     (reify
-      om/IRenderState
-      (render-state [_ {:keys [input-queue] :as opts}]
+      om/IRender
+      (render [_]
         (html [:li {:className (str "todo-item " hidden-class)}
                [:div.cont
                 [:span
@@ -135,13 +138,13 @@
                  ;;
                  ;; Styling is done in CSS.
                  {:className (str "toggle-status " (if (:completed? todo) "checked"))
-                  :onClick #(todo-status-toggle % todo input-queue)}]
+                  :onClick #(todo-status-toggle % todo)}]
                 [:label
                  {:className (str "title " (if (:completed? todo) "title-completed"))
                   :onClick (fn [_] (routes/goto-item todo))}
                  (:title todo)]
                 [:button.delete-todo.btn.btn-danger
-                 {:onClick #(todo-destroy % todo input-queue)}
+                 {:onClick #(todo-destroy % todo)}
                  "Delete"]]])))))
 
 (defn- todo-list-item-build
@@ -151,16 +154,14 @@
   (cond-> todo
           (not (list-item-visible? todo filter)) (assoc :hidden true)))
 
-(defn- todo-list [{:keys [filter todos queue] :as app} owner]
-  (let [input-queue (om/value queue)]
-    (om/component
-     (html
-      [:ul#todo-list-rows
-       (om/build-all todo-list-item
-                     todos
-                     {:key :id  ;; referring to the todo item's :id
-                      :init-state {:input-queue input-queue}
-                      :fn (fn [todo] (todo-list-item-build todo filter))})]))))
+(defn- todo-list [{:keys [filter todos] :as app} owner]
+  (om/component
+   (html
+    [:ul#todo-list-rows
+     (om/build-all todo-list-item
+                   todos
+                   {:key :id  ;; referring to the todo item's :id
+                    :fn (fn [todo] (todo-list-item-build todo filter))})])))
 
 ;; ----------------------------------------------------------------------
 ;; Filters
@@ -176,9 +177,8 @@
 (defn- filter-select [_ filter]
   (routes/goto-list filter))
 
-(defn- footer [{:keys [filter todos queue] :as app} owner]
-  (let [input-queue (om/value queue)        
-        active-count (count (remove #(:completed? %) (om/value todos)))
+(defn- footer [{:keys [filter todos] :as app} owner]
+  (let [active-count (count (remove #(:completed? %) (om/value todos)))
         completed-count (- (count todos) active-count)]
     (om/component
      (html [:div#footer.well
@@ -201,10 +201,10 @@
             [:div#completed-delete-cont
              {:className (if (< completed-count 1) "hidden")}
              [:span.btn.btn-warning
-              {:onClick #(todo-destroy-completed % input-queue)}
+              {:onClick #(todo-destroy-completed %)}
               "Delete Completed Items"]]]))))
 
-(defn- list-app [{:keys [filter todos queue] :as app} owner]
+(defn- list-app [{:keys [filter todos] :as app} owner]
   (reify
     om/IWillMount
     (will-mount [_]
@@ -224,9 +224,8 @@
 
 (defn start
   "Called when the [:todo-item] node is created"
-  [input-queue node-id]
+  [node-id]
   (let [app {:filter :all
              :all-completed? false
-             :queue input-queue
              :todos []}]
     (om/root app list-app (.getElementById js/document node-id))))

@@ -27,11 +27,11 @@
         html (:root templates)]
     (domina/append! (domina/by-id parent) (html {:id root-id}))))
 
-(defn add-list-template [_ _ input-queue]
-  (todo-list/start input-queue root-id))
+(defn add-list-template [_ _ _]
+  (todo-list/start root-id))
 
-(defn add-todo-template [_ _ input-queue]
-  (todo-item/start input-queue root-id))
+(defn add-todo-template [_ _ _]
+  (todo-item/start root-id))
 
 (defn destroy-view
   "unmount the root React component, and leave the renderer as is"

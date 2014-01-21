@@ -2,7 +2,8 @@
   (:require [io.pedestal.app.messages :as msg]
             [io.pedestal.app.protocols :as p]
             [pedestal-om-todo.history :as history]
-            [pedestal-om-todo.routes :as routes]            
+            [pedestal-om-todo.state :as state]
+            [pedestal-om-todo.routes :as routes]
             [pedestal-om-todo.utils :as util]
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer [html] :include-macros true]))
@@ -33,7 +34,7 @@
     (p/put-message input-queue msg)))
 
 (defn item-app [app owner]
-  (let [input-queue (:input-queue (om/value app))
+  (let [input-queue @state/input-queue
         todo (:todo (om/value app))]
     (reify
       om/IWillMount
@@ -71,10 +72,5 @@
                                     :todo nil})
         (reset! app-state nil)))))
 
-(defn start [input-queue node-id]
-  (om/root {:input-queue input-queue :todo {}}
-           item-app
-           (.getElementById js/document node-id)))
-
-
-
+(defn start [node-id]
+  (om/root {:todo {}} item-app (.getElementById js/document node-id)))
