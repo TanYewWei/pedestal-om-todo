@@ -49,8 +49,8 @@
              msg/topic [:todos :filter]
              :value (util/add-uuid {:filter (keyword filter)})}
     ^:input {msg/type :todos
-             msg/topic [:todos :modify :sentinel]
-             :todo (util/guid)}]))
+             msg/topic [:todos :modify :req-id]
+             :todo (util/uuid)}]))
 
 ;; ------------------------------
 ;; Todo Items

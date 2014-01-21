@@ -1,12 +1,9 @@
 (ns pedestal-om-todo.utils
-  (:require [cljs-uuid.core :as uuid])
-  (:import [goog.ui IdGenerator]))
+  (:require [cljs-uuid.core :as uuid]))
 
 (def app-ref (atom nil))
 
 (def ENTER_KEY 13)
-
-(defn guid [] (.getNextUniqueId (.getInstance IdGenerator)))
 
 (defn uuid [] (.-uuid (uuid/make-random)))
 
@@ -15,7 +12,9 @@
   [evt]
   (.-which evt))
 
-(defn add-uuid [m]
+(defn add-uuid
+  "adds a uuid to a map. Intended to help with refresh behaviour"
+  [m]
   (assoc m ::ts (uuid)))
 
 (defn log 
