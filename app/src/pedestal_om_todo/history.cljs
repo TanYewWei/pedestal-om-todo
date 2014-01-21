@@ -6,9 +6,7 @@
   (:import [goog History]
            [goog.History EventType]))
 
-(def last-focus (atom nil))
-
-(def history (History.))
+(def ^:private history (History.))
 
 (defn start [dispatcher]
   (events/listen history EventType/NAVIGATE #(dispatcher (.-token %)))
@@ -20,11 +18,5 @@
 (defn set-token! [token]
   (.setToken history token))
 
-(defn navigate!
-  "Adds a new item to History with a specified ${token}.
-
-   Returns a message to navigate to a foci with name ${focus}.
-   This message is intended to be sent to the input queue,"
-  [focus token]
-  (set-token! token)
-  (navigate focus))
+(defn back! []
+  (.back window/history))

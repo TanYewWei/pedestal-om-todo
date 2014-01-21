@@ -7,17 +7,24 @@
             [secretary.core :as secretary])
   (:require-macros [secretary.macros :refer [defroute]]))
 
-;; Think of all functions here as a way of relaying intent
-;; to switch to a different focus
+(def navigate
+  "message type for focus change intents"
+  ::navigate-intent)
 
-(def navigate ::navigate-intent)
-
-(defn- navigate-message [path value]
+(defn- navigate-message
+  "constructs a message that attempts to change the focus of the app.
+   This is used when changing focus requires data in the app-model
+   which we do not have on hand. See the /item/:id route below for
+   and example use case"
+  [path value]
   {msg/type navigate
    msg/topic (concat [:root :focus] path)
   :value value})
 
-(defn- execute-and-return [msgs]
+(defn- execute-and-return
+  "sends a vector of messages in order to the input queue
+   and returns those messages"
+  [msgs]
   (let [input-queue @state/input-queue]
     (doseq [msg msgs]
       (p/put-message input-queue msg))
@@ -27,53 +34,52 @@
 ;; List
 
 (defn goto-list
-  ([] (goto-list :all))
+  "switches focus to the todo list view."
+  ([]
+     (goto-list "all"))
   ([filter]
-     (history/set-token! "/")
-     (execute-and-return
-      [(history/navigate :todo-list)
-       ^:input {msg/type :todos msg/topic [:todos :filter] :value filter}
-       ^:input {msg/type :todos
-                msg/topic [:todos :modify :sentinel]
-                :todo (util/guid)}])))
+     ;; triggers off goto-list-worker function 
+     ;; via /:filter route
+     (history/set-token! (str "/" filter))))
 
-(defn goto-confirm-list []
-  (history/set-token! "/")
-  [(history/navigate :todo-list)
-   ^:input {msg/type :todos
-            msg/topic [:todos :modify :sentinel]
-            :todo (util/guid)}])
+(defn- goto-list-worker [filter]
+  (execute-and-return
+   [(history/navigate :todo-list)
+    ^:input {msg/type :todos
+             msg/topic [:todos :filter]
+             :value (util/add-uuid {:filter (keyword filter)})}
+    ^:input {msg/type :todos
+             msg/topic [:todos :modify :sentinel]
+             :todo (util/guid)}]))
 
 ;; ------------------------------
 ;; Todo Items
 
-(defn goto-item [todo]
+(defn goto-item
+  "Switches focus to a todo item ${todo}.
+
+   Changing focus can also be done using only a todo item's ID.
+   See the /item/:id route below for an example."
+  [todo]
   (let [set-viewing ^:input {msg/type :todos
                              msg/topic [:todos :viewing]
                              :todo todo}
-        set-focus {msg/type navigate
-                   msg/topic [:root :focus :item]
-                   :value (util/add-uuid todo)}
         set-nav (history/navigate :todo-item)
         url (str "/item/" (:id todo))
         input-queue @state/input-queue]
     (history/set-token! url)
-    (p/put-message input-queue set-nav)
-    (p/put-message input-queue set-viewing)
-    ))
-
-(defn goto-confirm-item [id app-model]
-  (util/log "goto-confirm-item")
-  (let [todo (get-in app-model [:todos :modify id])
-        url  (str "/item/" id)]
-    (history/set-token! url)
-    [{msg/type :todos msg/topic [:todos :viewing] :todo todo}
-     (history/navigate :todo-item)]))
+    (execute-and-return [set-nav
+                         set-viewing])))
 
 ;; ------------------------------
 ;; Behavior continue handler
 
-(defn focus-handler [inputs]
+(defn focus-handler
+  "This watches the path [:root :focus :*] for changes,
+   and switches focus based on those changes.
+
+   See the /item/:id route below for an example"
+  [inputs]
   (let [message (:message inputs)]
     (when (= navigate (msg/type message))
       (let [path (msg/topic message)
@@ -85,8 +91,9 @@
                       todo (get-in app-model path)]
                   (when (not (nil? todo))
                     (goto-item todo)))
-          :list (goto-list))))
-    []))
+          :list (if (nil? (:value message))
+                  (goto-list)
+                  (goto-list (:value message))))))))
 
 ;; ------------------------------
 ;; Routes
@@ -95,13 +102,17 @@
   (goto-list))
 
 (defroute "/:filter" [filter]
-  (goto-list filter))
+  (goto-list-worker filter))
 
 (defroute "/item/:id" [id]
-  (execute-and-return (navigate-message [:item] (util/add-uuid {:id id}))))
+  (execute-and-return [(navigate-message [:item] (util/add-uuid {:id id}))]))
 
 ;; ------------------------------
 ;; Dispatcher
 
-(defn dispatcher []
+(defn dispatcher
+  "Called in pedestal-om-todo.start/create-app
+   and used for routing browser history states to the
+   correct focus based on the routes defined above"
+  []
   (fn [token] (secretary/dispatch! token)))

@@ -61,7 +61,6 @@
    
    This is where any 'stateful' route processing is handled"
   [inputs]
-  ;;(util/log "focus-continue" (str inputs))
   (let [message (:message inputs)]
     (when (= :navigate (msg/type message))
       (let [path (msg/topic message)

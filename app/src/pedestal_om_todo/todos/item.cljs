@@ -1,7 +1,8 @@
 (ns pedestal-om-todo.todos.item
   (:require [io.pedestal.app.messages :as msg]
             [io.pedestal.app.protocols :as p]
-            [pedestal-om-todo.routes :as routes]
+            [pedestal-om-todo.history :as history]
+            [pedestal-om-todo.routes :as routes]            
             [pedestal-om-todo.utils :as util]
             [om.core :as om :include-macros true]
             [sablono.core :as html :refer [html] :include-macros true]))
@@ -15,14 +16,20 @@
 (defn- input-change! [owner key text]
   (om/transact! @app-state :todo #(assoc % key text)))
 
-(defn save [evt owner current-todo key input-queue]
+(defn save
+  "sends any changes the user made to todo attributes
+   to the app model, updating the user interface as needed."
+  [evt owner current-todo key input-queue]
   (let [new-text (.. evt -target -value)
         todo (assoc current-todo key new-text)
         todo-id (:id todo)
         msg {msg/type :todos
              msg/topic [:todos :modify todo-id]
              :todo todo}]
+    ;; update input value
     (input-change! owner key new-text)
+
+    ;; send message to app-model
     (p/put-message input-queue msg)))
 
 (defn item-app [app owner]
@@ -39,7 +46,7 @@
                [:div
                 [:button#back-button.btn.btn-info
                  {:ref "back-button"
-                 :onClick (fn [_] (routes/goto-list))}
+                 :onClick (fn [_] (history/back!))}
                  "Back"]]
                [:h4 "Edits are automatically saved"]
                [:div
