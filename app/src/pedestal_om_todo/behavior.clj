@@ -4,16 +4,13 @@
               [io.pedestal.app.dataflow :as dataflow]
               [io.pedestal.app.messages :as msg]
               [io.pedestal.app.protocols :as p]
-              [pedestal-om-todo.history :as history]
+              [pedestal-om-todo.models :as model]
               [pedestal-om-todo.routes :as routes]
               [pedestal-om-todo.state :as state]
               [pedestal-om-todo.utils :as util]))
 
 ;; ----------------------------------------------------------------------
 ;; Transforms
-
-(defn swap-transform [_ message]
-  (:value message))
 
 (defn set-value-transform [old-value message]
   (:value message))
@@ -35,11 +32,11 @@
 ;; Continue
 
 (defn- todo-modify-todos [todos]
-  (filter #(map? %) (vals todos)))
+  (filter #(model/valid-todo? %) (vals todos)))
 
 (defn todo-item-ordinal [inputs]
   (if-let [current-todo (first (vals (dataflow/added-inputs inputs)))]
-    (when (and (map? current-todo)
+    (when (and (model/valid-todo? current-todo)
                (not (:ord current-todo)))
       (let [todos (todo-modify-todos
                    (:old (dataflow/old-and-new inputs [:todos :modify])))
