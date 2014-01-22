@@ -2,7 +2,7 @@
 
 This is just a toy experiment as an attempt to use [David Nolen's Om](https://github.com/swannodette/om) along side [Cognitect's Pedestal](https://github.com/pedestal/pedestal) to implement a [TodoMVC example](http://todomvc.com).
 
-## Spec
+## Model
 
 Each todo will have the following attributes:
 
@@ -11,6 +11,10 @@ Each todo will have the following attributes:
 * **body** (string) - details of the todo
 * **ord** (integer) - the ordinal of a todo with respect to all other todos
 * **completed?** (boolean) - true if the todo has been completed
+
+This is represented by a record using [Prismatic's Schema](https://github.com/prismatic/schema), see the `pedestal-om-todo.models` namespace for the straightforward implementation.
+
+## Spec
 
 A user of the app should be able to:
 
