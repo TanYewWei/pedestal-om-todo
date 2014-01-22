@@ -4,7 +4,7 @@
             [io.pedestal.app.messages :as msg]
             [pedestal-om-todo.utils :as util])
   (:import [goog History]
-           [goog.History EventType]))
+           [goog.history EventType]))
 
 (def ^:private history (History.))
 

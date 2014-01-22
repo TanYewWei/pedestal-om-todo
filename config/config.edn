@@ -97,7 +97,7 @@
             :development {:uri "/pedestal-om-todo-dev.html"
                           :name "Development"
                           :out-file "pedestal-om-todo-dev.js"
-                          :main pedestal_om_todo.simulated.start
+                          :main pedestal_om_todo.start
                           :logging? true
                           :order 4}
             :production {:uri "/pedestal-om-todo.html"
@@ -105,5 +105,5 @@
                          :optimizations :advanced
                          :compiler-options {:externs ["app/externs/react.js"]}
                          :out-file "pedestal-om-todo.js"
-                         :main pedestal_om_todo.simulated.start
+                         :main pedestal_om_todo.start
                          :order 6}}}}
