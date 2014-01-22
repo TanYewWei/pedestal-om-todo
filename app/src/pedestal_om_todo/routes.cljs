@@ -19,7 +19,7 @@
   [path value]
   {msg/type navigate
    msg/topic (concat [:root :focus] path)
-  :value value})
+   :value value})
 
 (defn- execute-and-return
   "sends a vector of messages in order to the input queue

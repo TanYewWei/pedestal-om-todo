@@ -10,10 +10,12 @@
             [io.pedestal.app.render.push.templates :as templates]
             [om.core :as om :include-macros true]
             [om.dom :as dom :include-macros true]
+            [pedestal-om-todo.models :as model]
             [pedestal-om-todo.routes :as routes]
             [pedestal-om-todo.state :as state]
             [pedestal-om-todo.utils :as util]
-            [sablono.core :as html :refer [html] :include-macros true]))
+            [sablono.core :as html :refer [html] :include-macros true])
+  (:import [pedestal-om-todo.models.Todo]))
 
 (def ^:private app-state (atom nil))
 
@@ -25,7 +27,7 @@
   [_ [_ _ _ tree] _]
   (when (not (nil? @app-state))
     (let [values (vals tree)
-          todos (vec (filter #(map? %) values))]
+          todos (vec (filter #(model/valid-todo? %) values))]
       (om/transact! @app-state :todos (fn [_] todos)))))
 
 (defn todos-all-completed?
@@ -38,11 +40,12 @@
   (when (== (util/keyboard-event-key evt) util/ENTER_KEY)
     (let [new-field (om/get-node owner "new-field")]
       (when-not (string/blank? (.. new-field -value trim))
-        (let [new-todo {:id (util/uuid)
-                        :title (.-value new-field)
-                        :body ""
-                        :ord nil
-                        :completed? false}
+        (let [new-todo (model/map->Todo
+                        {:id (util/uuid)
+                         :title (.-value new-field)
+                         :body ""
+                         :ord nil
+                         :completed? false})
               msg {msg/type :todos
                    msg/topic [:todos :modify (:id new-todo)]
                    :todo new-todo}

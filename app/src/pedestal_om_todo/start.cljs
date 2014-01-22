@@ -6,6 +6,7 @@
             [io.pedestal.app.messages :as msg]
             [pedestal-om-todo.behavior :as behavior]
             [pedestal-om-todo.history :as history]
+            [pedestal-om-todo.models :as model]
             [pedestal-om-todo.routes :as routes]
             [pedestal-om-todo.state :as state]
             [pedestal-om-todo.rendering :as rendering]))
@@ -23,11 +24,12 @@
     ;; mock todo
     (p/put-message input-queue {msg/type :todos
                                 msg/topic [:todos :modify "123"]
-                                :todo {:id "123"
-                                       :title "hello"
-                                       :body "it's a good day"
-                                       :ord 0
-                                       :completed? false}})
+                                :todo (model/map->Todo
+                                       {:id "123"
+                                        :title "hello"
+                                        :body "it's a good day"
+                                        :ord 0
+                                        :completed? false})})
 
     ;; Set routes dispatcher
     (history/start (routes/dispatcher))

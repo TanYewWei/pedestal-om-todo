@@ -10,6 +10,7 @@
                  [om "0.2.3"]
                  [sablono "0.2.1"]
                  [secretary "0.4.0"]
+                 [prismatic/schema "0.2.0"]
                  [com.cemerick/piggieback "0.1.0"]]
   :min-lein-version "2.0.0"
   :source-paths ["app/src" "app/templates"]
