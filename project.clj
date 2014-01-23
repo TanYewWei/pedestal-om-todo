@@ -10,7 +10,6 @@
                  [om "0.2.3"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2138"]
-                 [org.clojure/core.async "0.1.267.0-0d7780-alpha"]                                                                                    
                  [prismatic/schema "0.2.0"]
                  [sablono "0.2.1"]
                  [secretary "0.4.0"]]
