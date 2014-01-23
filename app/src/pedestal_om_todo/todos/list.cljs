@@ -27,8 +27,9 @@
   [_ [_ _ _ tree] _]
   (when (not (nil? @app-state))
     (let [values (vals tree)
-          todos (vec (filter #(model/valid-todo? %) values))]
-      (om/transact! @app-state :todos (fn [_] todos)))))
+          todos (vec (filter #(model/valid-todo? %) values))
+          todos-sorted (sort-by #(:ord %) todos)]
+      (om/transact! @app-state :todos (fn [_] todos-sorted)))))
 
 (defn todos-all-completed?
   "receives updates from the app-model to determine if the
@@ -45,7 +46,8 @@
                          :title (.-value new-field)
                          :body ""
                          :ord nil
-                         :completed? false})
+                         :completed? false
+                         :created (util/now-unix-timestamp)})
               msg {msg/type :todos
                    msg/topic [:todos :modify (:id new-todo)]
                    :todo new-todo}

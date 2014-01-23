@@ -17,6 +17,19 @@
   [m]
   (assoc m ::ts (uuid)))
 
+(defn now-unix-timestamp
+  "Returns a unix timestamp in milliseconds"
+  []
+  (let [d (js/Date.)
+        year (.getUTCFullYear d)
+        month (.getUTCMonth d)
+        day (.getUTCDate d)
+        hour (.getUTCHours d)
+        min (.getUTCMinutes d)
+        sec (.getUTCSeconds d)
+        ms (.getUTCMilliseconds d)]
+    (js/Date.UTC year month day hour min sec ms)))
+
 (defn log 
   ([x] (js/console.log x))
   ([x y] (js/console.log x y)))

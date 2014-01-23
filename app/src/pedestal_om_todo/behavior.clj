@@ -16,7 +16,23 @@
   (:value message))
 
 (defn todo-modify-transform [old-value message]
-  (:todo message))
+  (when-let [todo (:todo message)]
+    (cond
+     ;; old todo has no timestamp,
+     ;; just override
+     (or (nil? old-value)
+         (nil? (:updated old-value)))
+     todo
+     
+     ;; both todos have timestamps,
+     ;; so we should only save the latest one
+     (and (:updated old-value)
+          (:updated todo)
+          (> (:updated todo) (:updated old-value)))
+     todo         
+     
+     ;; else, keep our old todo
+     true old-value)))
 
 (defn refresh-transform [_ _]
   (util/uuid))
@@ -36,10 +52,10 @@
 
 (defn todo-item-ordinal [inputs]
   (if-let [current-todo (first (vals (dataflow/added-inputs inputs)))]
-    (when (and (model/valid-todo? current-todo)
+    (when (and (map? current-todo) ;; todos may not have ordinal at this stage
                (not (:ord current-todo)))
       (let [todos (todo-modify-todos
-                   (:old (dataflow/old-and-new inputs [:todos :modify])))
+                   (:new (dataflow/old-and-new inputs [:todos :modify])))
             latest-todo (apply max-key :ord  todos)
             new-ord (inc (:ord latest-todo))
             new-todo (assoc current-todo :ord new-ord)]
@@ -96,7 +112,7 @@
                [:todos [:todos :modify :*] todo-modify-transform]
                [:todos [:todos :all-completed?] todo-all-completed?-transform]
                [:todos [:todos :destroy] refresh-transform]
-               [:todos [:todos :viewing] todo-modify-transform]]
+               [:todos [:todo-item :todo] todo-modify-transform]]
    :continue #{[#{[:todos :all-completed?]} todo-all-completed]
                [#{[:todos :modify :*]} todo-item-ordinal]
                [#{[:todos :destroy]} todo-destroy]
@@ -106,8 +122,7 @@
              [:todo-item :*]
              [:todos :filter]
              [:todos :all-completed?]
-             [:todos :modify]
-             [:todos :viewing]} (app/default-emitter [])]]
+             [:todos :modify]} (app/default-emitter [])]]
    :focus {:todo-list [[:todo-list] [:todos]]
            :todo-item [[:todo-item] [:todos]]
            :root [[:root]]
