@@ -2,6 +2,8 @@
 
 This is just a toy experiment as an attempt to use [David Nolen's Om](https://github.com/swannodette/om) along side [Cognitect's Pedestal](https://github.com/pedestal/pedestal) to implement a [TodoMVC example](http://todomvc.com).
 
+![](https://raw.github.com/TanYewWei/pedestal-om-todo/images/preview-0.png)
+
 ## Model
 
 Each todo will have the following attributes:
@@ -105,11 +107,26 @@ lein marg app
 
 * actually figure out how to unit test the damn thing
 
+* Allow re-ordering of todos (click and drag as per [David's sortable example](https://github.com/swannodette/om/blob/master/examples/sortable/src/core.cljs))
+
+* Add tags to todos, with typeahead search for easy entry (use [David's typeahead example](https://github.com/swannodette/om/blob/master/examples/typeahead/src/core.cljs))
+
+* Smoother animation between transitions
+
+    * navigation between List View and Item View
+    * when checking/unchecking a todo
+
 * undo support as per [David Nolen's example](http://swannodette.github.io/todomvc/labs/architecture-examples/om-undo/index.html)
+
+    This should only support specific operations (eg: undo delete of a todo, undo creation of a todo).
+
+    A related feature would be todo snapshotting, so you can reset todos to a particular state
 
 * persistence API
 
     This should just be an interface that can be pluggable into any adapter (localStorage, some database server, etc ...)
+
+    This should play nicely with undo support (which would require changes to the data model).
 
 * externs file for React
 

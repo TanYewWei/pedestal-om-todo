@@ -101,7 +101,8 @@
   (goto-list))
 
 (defroute "/:filter" [filter]
-  (goto-list-worker filter))
+  (when (contains? #{"all" "active" "completed"} filter)
+    (goto-list-worker filter)))
 
 (defroute "/item/:id" [id]
   (execute-and-return [(navigate-message [:item] (util/add-uuid {:id id}))]))
