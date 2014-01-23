@@ -19,7 +19,9 @@
 
 (def ^:private root-id
   "Instead of swapping out HTML templates,
-   we instead only create and destroy Om roots."
+   we instead only create and destroy Om roots.
+   We hence only need to create a single HTML <div> container
+   with a unique ID."
   (util/uuid))
 
 (defn create-root [renderer [_ path :as delta] input-queue]
@@ -47,11 +49,15 @@
   [;; Root View never gets destroyed
    [:node-create [:root] create-root]
 
-   ;; list
+   ;; List View
    [:node-create [:todo-list] add-list-template]
    [:node-destroy [:todo-list] destroy-view]
 
-   ;; item view
+   ;; Item View
+   ;;
+   ;; Note that we do not create the item upon receiving
+   ;; the [:node-create _ _] delta, because we need to wait
+   ;; to receive the todo item to pre-populate input fields
    [:value [:todo-item :todo] add-todo-template]
    [:node-destroy [:todo-item] destroy-view]
 

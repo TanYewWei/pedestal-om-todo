@@ -57,7 +57,7 @@
              :defaultValue (:body todo)}]]])))))
 
 (defn start [node-id todo]
-  ;; called when [:todo-item :]
+  ;; called when [:todo-item :item] receives a new value
   (when (model/valid-todo? todo)
     (om/root {:todo todo}
              item-app

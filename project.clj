@@ -6,6 +6,7 @@
                  [domina "1.0.1"]
                  [io.pedestal/pedestal.app "0.2.2"]
                  [io.pedestal/pedestal.app-tools "0.2.2"]
+                 ;;[midje "1.6.0"]
                  [om "0.2.3"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2138"]
