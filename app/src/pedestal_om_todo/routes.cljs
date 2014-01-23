@@ -62,7 +62,7 @@
    See the /item/:id route below for an example."
   [todo]
   (let [set-viewing ^:input {msg/type :todos
-                             msg/topic [:todos :viewing]
+                             msg/topic [:todo-item :todo]
                              :todo todo}
         set-nav (history/navigate :todo-item)
         url (str "/item/" (:id todo))

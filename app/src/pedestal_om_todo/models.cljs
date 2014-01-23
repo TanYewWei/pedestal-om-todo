@@ -9,7 +9,8 @@
      body       :- (s/maybe s/Str)
      ord        :- s/Int
      completed? :- js/Boolean
-     timestamp  :- (s/maybe s/Int)])
+     created    :- (s/maybe s/Int)
+     modified   :- (s/maybe s/Int)])
 
 (sm/defn valid-todo? :- js/Boolean
   [x :- s/Any]

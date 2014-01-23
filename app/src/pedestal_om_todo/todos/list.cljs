@@ -46,7 +46,8 @@
                          :title (.-value new-field)
                          :body ""
                          :ord nil
-                         :completed? false})
+                         :completed? false
+                         :created (util/now-unix-timestamp)})
               msg {msg/type :todos
                    msg/topic [:todos :modify (:id new-todo)]
                    :todo new-todo}

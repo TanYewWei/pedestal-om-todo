@@ -30,8 +30,8 @@
 (defn add-list-template [_ _ _]
   (todo-list/start root-id))
 
-(defn add-todo-template [_ _ _]
-  (todo-item/start root-id))
+(defn add-todo-template [_ [_ _ _ todo] _]
+  (todo-item/start root-id todo))
 
 (defn destroy-view
   "unmount the root React component, and leave the renderer as is"
@@ -52,13 +52,12 @@
    [:node-destroy [:todo-list] destroy-view]
 
    ;; item view
-   [:node-create [:todo-item] add-todo-template]
+   [:value [:todo-item :todo] add-todo-template]
    [:node-destroy [:todo-item] destroy-view]
 
    ;; todos
    [:node-destroy [:todos :modify] h/default-destroy]
    [:value [:todos :modify] todo-list/todos-modify]
    [:value [:todos :all-completed?] todo-list/todos-all-completed?]
-   [:value [:todos :viewing] todo-item/view-item]
    [:value [:todos :filter] todo-list/filter-set]
    ])

@@ -21,14 +21,14 @@
      ;; old todo has no timestamp,
      ;; just override
      (or (nil? old-value)
-         (nil? (:timestamp old-value)))
+         (nil? (:updated old-value)))
      todo
      
      ;; both todos have timestamps,
      ;; so we should only save the latest one
-     (and (:timestamp old-value)
-          (:timestamp todo)
-          (> (:timestamp todo) (:timestamp old-value)))
+     (and (:updated old-value)
+          (:updated todo)
+          (> (:updated todo) (:updated old-value)))
      todo         
      
      ;; else, keep our old todo
@@ -49,17 +49,6 @@
 
 (defn- todo-modify-todos [todos]
   (filter #(model/valid-todo? %) (vals todos)))
-
-(defn todo-view-intent [inputs]
-  (when (= [:todos :viewing] (msg/topic (:message inputs)))
-    (util/log "view-intent:" (str (:message inputs)))
-    (let [todo-id (:id (:message inputs))
-          current-todos (todo-modify-todos
-                         (:new (dataflow/old-and-new inputs [:todos :modify])))
-          todo (todo-id current-todos)]
-      [^:input {msg/type :todos
-                msg/topic [:todos :viewing]
-                :todo todo}])))
 
 (defn todo-item-ordinal [inputs]
   (if-let [current-todo (first (vals (dataflow/added-inputs inputs)))]
@@ -123,10 +112,9 @@
                [:todos [:todos :modify :*] todo-modify-transform]
                [:todos [:todos :all-completed?] todo-all-completed?-transform]
                [:todos [:todos :destroy] refresh-transform]
-               [:todos [:todos :viewing] todo-modify-transform]]
+               [:todos [:todo-item :todo] todo-modify-transform]]
    :continue #{[#{[:todos :all-completed?]} todo-all-completed]
                [#{[:todos :modify :*]} todo-item-ordinal]
-               [#{[:todos :view-intent]} todo-view-intent]
                [#{[:todos :destroy]} todo-destroy]
                [#{[:root :focus]} routes/focus-handler]}
    :emit [{:init init-todos}
@@ -134,8 +122,7 @@
              [:todo-item :*]
              [:todos :filter]
              [:todos :all-completed?]
-             [:todos :modify]
-             [:todos :viewing]} (app/default-emitter [])]]
+             [:todos :modify]} (app/default-emitter [])]]
    :focus {:todo-list [[:todo-list] [:todos]]
            :todo-item [[:todo-item] [:todos]]
            :root [[:root]]
