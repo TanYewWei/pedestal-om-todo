@@ -11,6 +11,8 @@ Each todo will have the following attributes:
 * **body** (string) - details of the todo
 * **ord** (integer) - the ordinal of a todo with respect to all other todos
 * **completed?** (boolean) - true if the todo has been completed
+* **created** (integer) - Unix Timestamp when todo was created
+* **updated** (integer) - Unix Timestamp when todo was last updated
 
 This is represented by a record using [Prismatic's Schema](https://github.com/prismatic/schema), see the `pedestal-om-todo.models` namespace for the straightforward implementation.
 
@@ -54,7 +56,7 @@ Each of those views is an Om app. As such we don't swap templates in and out lik
 
 Instead, what happens is that a root HTML template is initiated on startup, and then the appropriate Om apps are mounted and unmounted as focus changes. See the `pedestal-om-todo.rendering` namespace for the intended render config used to implement this behaviour.
 
-A side effect of this is that the `design` control panel of standard Pedestal is basically useless, since everything is populated "dynamically" by javascript. The upside of using Om. Personally, I find that recording a series of deltas and then replaying them to be an adequate means of testing. This probably doesn't scale that well with larger apps, so I'll have to look into better methods of unit testing.
+A side effect of this is that the `design` control panel of standard Pedestal is basically useless, since everything is populated "dynamically" by javascript. The upside of using Om. Recording a series of deltas and then replaying them could probably be an adequate substitute, though this probably doesn't scale that well with larger apps, so I'll have to look into better methods of unit testing.
 
 ### Routing
 
