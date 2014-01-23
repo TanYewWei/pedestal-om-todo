@@ -8,7 +8,8 @@
      title      :- s/Str
      body       :- (s/maybe s/Str)
      ord        :- s/Int
-     completed? :- js/Boolean])
+     completed? :- js/Boolean
+     timestamp  :- (s/maybe s/Int)])
 
 (sm/defn valid-todo? :- js/Boolean
   [x :- s/Any]

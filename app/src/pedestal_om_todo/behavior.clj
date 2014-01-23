@@ -16,7 +16,23 @@
   (:value message))
 
 (defn todo-modify-transform [old-value message]
-  (:todo message))
+  (when-let [todo (:todo message)]
+    (cond
+     ;; old todo has no timestamp,
+     ;; just override
+     (or (nil? old-value)
+         (nil? (:timestamp old-value)))
+     todo
+     
+     ;; both todos have timestamps,
+     ;; so we should only save the latest one
+     (and (:timestamp old-value)
+          (:timestamp todo)
+          (> (:timestamp todo) (:timestamp old-value)))
+     todo         
+     
+     ;; else, keep our old todo
+     true old-value)))
 
 (defn refresh-transform [_ _]
   (util/uuid))
@@ -34,12 +50,23 @@
 (defn- todo-modify-todos [todos]
   (filter #(model/valid-todo? %) (vals todos)))
 
+(defn todo-view-intent [inputs]
+  (when (= [:todos :viewing] (msg/topic (:message inputs)))
+    (util/log "view-intent:" (str (:message inputs)))
+    (let [todo-id (:id (:message inputs))
+          current-todos (todo-modify-todos
+                         (:new (dataflow/old-and-new inputs [:todos :modify])))
+          todo (todo-id current-todos)]
+      [^:input {msg/type :todos
+                msg/topic [:todos :viewing]
+                :todo todo}])))
+
 (defn todo-item-ordinal [inputs]
   (if-let [current-todo (first (vals (dataflow/added-inputs inputs)))]
-    (when (and (model/valid-todo? current-todo)
+    (when (and (map? current-todo) ;; todos may not have ordinal at this stage
                (not (:ord current-todo)))
       (let [todos (todo-modify-todos
-                   (:old (dataflow/old-and-new inputs [:todos :modify])))
+                   (:new (dataflow/old-and-new inputs [:todos :modify])))
             latest-todo (apply max-key :ord  todos)
             new-ord (inc (:ord latest-todo))
             new-todo (assoc current-todo :ord new-ord)]
@@ -99,6 +126,7 @@
                [:todos [:todos :viewing] todo-modify-transform]]
    :continue #{[#{[:todos :all-completed?]} todo-all-completed]
                [#{[:todos :modify :*]} todo-item-ordinal]
+               [#{[:todos :view-intent]} todo-view-intent]
                [#{[:todos :destroy]} todo-destroy]
                [#{[:root :focus]} routes/focus-handler]}
    :emit [{:init init-todos}

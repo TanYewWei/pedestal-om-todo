@@ -68,8 +68,7 @@
         url (str "/item/" (:id todo))
         input-queue @state/input-queue]
     (history/set-token! url)
-    (execute-and-return [set-nav
-                         set-viewing])))
+    (execute-and-return [set-nav set-viewing])))
 
 ;; ------------------------------
 ;; Behavior continue handler
