@@ -1,6 +1,5 @@
 (ns pedestal-om-todo.todos.item
-  (:require [cljs.core.async :refer [<! put! chan]]
-            [io.pedestal.app.messages :as msg]
+  (:require [io.pedestal.app.messages :as msg]
             [io.pedestal.app.protocols :as p]
             [io.pedestal.app.render.events :as events]
             [om.core :as om :include-macros true]
@@ -9,8 +8,7 @@
             [pedestal-om-todo.state :as state]
             [pedestal-om-todo.routes :as routes]
             [pedestal-om-todo.utils :as util]           
-            [sablono.core :as html :refer [html] :include-macros true])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [sablono.core :as html :refer [html] :include-macros true]))
 
 (defn save
   "sends any changes the user made to todo attributes
