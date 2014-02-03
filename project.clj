@@ -1,28 +1,23 @@
 (defproject pedestal-om-todo "0.0.1-SNAPSHOT"
-  :cljsbuild {:builds [{:source-paths ["app" "test"]
-                        :compiler {:output-to "target/cljs/testable.js"
-                                   :optimizations :whitespace
-                                   :pretty-print true}}]
-              :test-commands {"unit-tests" ["phantomjs" :runner
-                                            "window.literal_js_was_evaluated=true"
-                                            "target/cljs/testable.js"]}}
   :description "FIXME: write description"
   :dependencies [[com.cemerick/piggieback "0.1.0"]
-                 [ch.qos.logback/logback-classic "1.0.13" :exclusions [org.slf4j/slf4j-api]]                 
+                 [com.cemerick/double-check "0.5.4-SNAPSHOT"]
+                 [ch.qos.logback/logback-classic "1.0.13" :exclusions [org.slf4j/slf4j-api]]
                  [cljs-uuid "0.0.4"] 
                  [domina "1.0.1"]
                  [io.pedestal/pedestal.app "0.2.2"]
                  [io.pedestal/pedestal.app-tools "0.2.2"]
-                 ;;[midje "1.6.0"]
-                 [om "0.2.3"]
+                 [om "0.3.5"]
                  [org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2138"]
+                 [org.clojure/clojurescript "0.0-2156"]
                  [prismatic/schema "0.2.0"]
-                 [sablono "0.2.1"]
-                 [secretary "0.4.0"]]    
+                 [sablono "0.2.3"]
+                 [secretary "0.4.0"]]
   :min-lein-version "2.0.0"
   :plugins [[lein-cljsbuild "1.0.0"]
-            [com.cemerick/clojurescript.test "0.2.1"]]
+            [prismatic/cljs-test "0.0.6"]
+            ;;[com.cemerick/clojurescript.test "0.2.1"]
+            ]
   :repl-options  {:init-ns user
                   :init (try
                           (use 'io.pedestal.app-tools.dev)

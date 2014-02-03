@@ -1,3 +1,4 @@
+
 /* ----------------------------------------------------------------------
  * TODO LIST
  * ---------------------------------------------------------------------- */
@@ -175,11 +176,40 @@ $color-checked: #85ada7;
         width: 100%;
     }
 
-    #body-edit {
+    #body-edit-cont {
+        margin-top: 15px;
+    }
+
+    #body-edit {        
         font-size: 1.2em;
         height: 150px;
         margin: 15px auto;
         padding: 7px;
         width: 100%;
     }
+}
+
+/* ----------------------------------------------------------------------
+ * COMMON
+ * ---------------------------------------------------------------------- */
+
+.input {
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+    background-color: white;
+    background-color: -moz-field;
+    border: 1px solid darkgray;
+    box-shadow: 1px 1px 1px 0 lightgray inset;  
+    font: -moz-field;
+    font: -webkit-small-control;
+    padding: 5px 8px;
+}
+
+.textarea {
+    -moz-appearance: textfield-multiline;
+    -webkit-appearance: textarea;
+    border: 1px solid gray;
+    overflow: auto;
+    padding: 5px 8px;
+    resize: both;
 }
