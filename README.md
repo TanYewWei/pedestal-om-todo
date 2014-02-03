@@ -3,6 +3,7 @@
 This is just a toy experiment as an attempt to use [David Nolen's Om](https://github.com/swannodette/om) along side [Cognitect's Pedestal](https://github.com/pedestal/pedestal) to implement a [TodoMVC example](http://todomvc.com).
 
 ![](https://raw.github.com/TanYewWei/pedestal-om-todo/master/images/preview-0.png)
+![](https://raw.github.com/TanYewWei/pedestal-om-todo/master/images/preview-1.png)
 
 ## Model
 

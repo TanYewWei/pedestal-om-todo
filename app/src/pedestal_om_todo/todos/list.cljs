@@ -118,6 +118,7 @@
           [:input#new-todo
            {:placeholder "What needs to be done?"
             :ref "new-field"
+            :defaultValue ""
             :onKeyDown #(new-todo-keydown % owner)}]])))
 
 (defn- list-item-visible? [todo filter]

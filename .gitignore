@@ -3,6 +3,8 @@ docs/
 logs/
 out/
 target/
+.lein-failures
 .lein-repl-history
 .nrepl-port
 .sass-cache
+.repl/
