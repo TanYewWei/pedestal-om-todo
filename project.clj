@@ -11,16 +11,10 @@
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2156"]
                  [prismatic/schema "0.2.0"]
-                 [sablono "0.2.3"]
+                 [sablono "0.2.6"]
                  [secretary "0.4.0"]]
+
   :min-lein-version "2.0.0"
-<<<<<<< HEAD
-  :plugins [[lein-cljsbuild "1.0.0"]
-            [prismatic/cljs-test "0.0.6"]
-            ;;[com.cemerick/clojurescript.test "0.2.1"]
-            ]
-=======
->>>>>>> master
   :repl-options  {:init-ns user
                   :init (try
                           (use 'io.pedestal.app-tools.dev)
