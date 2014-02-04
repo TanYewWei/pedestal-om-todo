@@ -11,8 +11,9 @@
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2156"]
                  [prismatic/schema "0.2.0"]
-                 [sablono "0.2.3"]
+                 [sablono "0.2.6"]
                  [secretary "0.4.0"]]
+
   :min-lein-version "2.0.0"
   :repl-options  {:init-ns user
                   :init (try
