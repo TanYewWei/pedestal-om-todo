@@ -85,7 +85,12 @@
   "toggles the status of a particular todo"
   [evt todo]
   (let [new-todo (update-in todo [:completed?] #(not %))
-        input-queue @state/input-queue]
+        input-queue @state/input-queue
+        ;; get :all-completed? state.
+        ;; this is a HACK for reading, and I need to think
+        ;; of a better way to do this on the data-model layer
+        ;; instead of the rendering layer (ie: in "behavior.clj")
+        all-completed? (om/transact! @app-state :all-completed? (fn [x] x))]
     ;; Put one message to modify todo status
     (p/put-message input-queue {msg/type :todos
                                 msg/topic [:todos :modify (:id todo)]
@@ -93,8 +98,7 @@
     
     ;; Put another message to possibly 
     ;; toggle all-completed? status to be UNCHECKED
-    (if (and (:completed? todo)
-             (om/read @app-state :all-completed? (fn [x] x)))
+    (if (and all-completed? (not (:completed new-todo)))
       (p/put-message input-queue {msg/type :todos
                                   msg/topic [:todos :all-completed?]
                                   :value false}))))

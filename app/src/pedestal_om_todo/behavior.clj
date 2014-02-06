@@ -39,9 +39,14 @@
 
 (defn todo-all-completed?-transform [old-value message]
   (let [value (:value message)]
-    (cond
+    (cond     
+     ;; use newly provided value
      (not (nil? value)) value
+     
+     ;; never previously set
      (nil? old-value)   true
+
+     ;; flip switch
      true               (not old-value))))
 
 ;; ----------------------------------------------------------------------
