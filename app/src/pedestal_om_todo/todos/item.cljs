@@ -153,6 +153,6 @@
 (defn start [node-id todo]
   ;; called when [:todo-item :item] receives a new value
   (when (model/valid-todo? todo)
-    (om/root {:todo todo}
-             item-app
-             (.getElementById js/document node-id))))
+    (om/root item-app
+             {:todo todo}
+             {:target (.getElementById js/document node-id)})))

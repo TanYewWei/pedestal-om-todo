@@ -7,7 +7,7 @@
                  [domina "1.0.1"]
                  [io.pedestal/pedestal.app "0.2.2"]
                  [io.pedestal/pedestal.app-tools "0.2.2"]
-                 [om "0.3.6"]
+                 [om "0.4.0"]
                  [org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2156"]
                  [prismatic/schema "0.2.0"]

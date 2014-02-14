@@ -238,4 +238,6 @@
   (let [app {:filter :all
              :all-completed? false
              :todos []}]
-    (om/root app list-app (.getElementById js/document node-id))))
+    (om/root list-app
+             app
+             {:target (.getElementById js/document node-id)})))
